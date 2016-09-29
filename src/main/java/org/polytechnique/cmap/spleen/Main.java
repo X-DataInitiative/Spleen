@@ -5,6 +5,7 @@ import java.util.*;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
 import static java.util.Arrays.copyOfRange;
 
@@ -21,7 +22,12 @@ public class Main {
         if(new File(args[1]).exists()){
             inputPath = args[1];
         }
+
         String outputPath = args[2];
+
+        Integer nbKnots = Integer.parseInt(args[3]);
+
+        Boolean normalizeOrigin = false;
 
         CSVReader reader = new CSVReader(new FileReader(inputPath));
         List<String[]> rows = reader.readAll();
@@ -56,7 +62,7 @@ public class Main {
         List<String[]> result = new ArrayList<String[]>();
         int knotCountIndex = 4;
         int firstKnotIndex = knotCountIndex + 1;
-        int firstEstimateIndex = knotCountIndex + 10 +1;
+        int firstEstimateIndex = knotCountIndex + nbKnots +1;
 
         for(int i=1; i<rows.size(); i++){
             String[] row = rows.get(i);
@@ -68,22 +74,26 @@ public class Main {
             String[] knots =  Arrays.copyOfRange(row, firstKnotIndex, firstKnotIndex + knotCount);
             String[] estimates =  Arrays.copyOfRange(row, firstEstimateIndex, firstEstimateIndex + knotCount);
 
-            double[] ai = new double[knotCount];
-            double[] bi = new double[knotCount];
-            for(int j=0; j<knotCount; j++){
-                ai[j] = Double.parseDouble(knots[j]);
-                bi[j] = Double.parseDouble(estimates[j]);
+            double[] ai;
+            double[] bi;
+            if(normalizeOrigin){
+                ai = new double[knotCount+1];
+                bi = new double[knotCount+1];
+                ai[0] = 0.0;
+                bi[0] = 0.0;
+                for(int j=0; j<knotCount; j++){
+                    ai[j+1] = Double.parseDouble(knots[j]);
+                    bi[j+1] = Double.parseDouble(estimates[j]);
+                }
+            } else {
+                ai = new double[knotCount];
+                bi = new double[knotCount];
+                for (int j = 0; j < knotCount; j++) {
+                    ai[j] = Double.parseDouble(knots[j]);
+                    bi[j] = Double.parseDouble(estimates[j]);
+                }
             }
 
-            /*double[] ai = new double[knotCount+1];
-            double[] bi = new double[knotCount+1];
-            ai[0] = 0.0;
-            bi[0] = 0.0
-            for(int j=0; j<knotCount; j++){
-                ai[j+1] = Double.parseDouble(knots[j]);
-                bi[j+1] = Double.parseDouble(estimates[j]);
-            }
-            */
             System.out.println(moleculeName);
             System.out.println(Arrays.toString(ai));
             System.out.println(Arrays.toString(bi));
